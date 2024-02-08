@@ -1,67 +1,88 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:photo_manager/photo_manager.dart';
+
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Barcode Collector From the Gallery',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.yellow),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Barcode Collector From the Gallery'),
+      home: MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
-
   @override
   _MyHomePageState createState() => _MyHomePageState();
-
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  File? _image;
+  List<AssetEntity>? _imageList;
 
-  Future<void> _getImage() async {
-    final picker = ImagePicker();
-    picker.
-    final pickedImage = await picker.pickImage(source: ImageSource.gallery);
+  @override
+  void initState() {
+    super.initState();
+    _loadImages();
+  }
 
-    setState(() {
-      if (pickedImage != null) {
-        _image = File(pickedImage.path);
+  Future<void> _loadImages() async {
+    final result = await PhotoManager.requestPermissionExtend();
+    if (result == PermissionState.authorized) {
+      final assets = await PhotoManager.getAssetPathList(type: RequestType.image);
+      if (assets.isNotEmpty) {
+        final assetList = await assets[0].getAssetListRange(start: 0, end: 100); // Adjust the range as needed
+        setState(() {
+          _imageList = assetList;
+        });
       }
-    });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('iOS 갤러리 예제'),
+        title: Text('iOS 갤러리 조회 '),
       ),
-      body: Center(
-        child: _image == null
-            ? Text('이미지를 선택하세요.')
-            : Image.file(_image!),
+      body: _imageList == null
+          ? Center(child: CircularProgressIndicator())
+          : GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 4.0,
+          mainAxisSpacing: 4.0,
+        ),
+        itemCount: _imageList!.length,
+        itemBuilder: (context, index) {
+          return ImageItem(assetEntity: _imageList![index]);
+        },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _getImage,
-        tooltip: '이미지 선택',
-        child: Icon(Icons.add_a_photo),
-      ),
+    );
+  }
+}
+
+class ImageItem extends StatelessWidget {
+  final AssetEntity assetEntity;
+
+  const ImageItem({Key? key, required this.assetEntity}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<File?> (
+      future: assetEntity.file,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+          return Image.file(snapshot.data!);
+        } else {
+          return Center(child: CircularProgressIndicator());
+        }
+      },
     );
   }
 }
