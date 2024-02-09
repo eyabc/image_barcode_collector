@@ -9,7 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'utils.dart';
 
 class GalleryView extends StatefulWidget {
-  GalleryView(
+  const GalleryView(
       {Key? key,
         required this.title,
         this.text,
