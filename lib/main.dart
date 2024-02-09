@@ -1,88 +1,73 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:photo_manager/photo_manager.dart';
+import 'package:image_barcode_collector/vision_detector_views/barcode_scanner_view.dart';
 
 
-void main() {
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(MyApp());
 }
-
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: MyHomePage(),
+      debugShowCheckedModeBanner: false,
+      home: Home(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  List<AssetEntity>? _imageList;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadImages();
-  }
-
-  Future<void> _loadImages() async {
-    final result = await PhotoManager.requestPermissionExtend();
-    if (result == PermissionState.authorized) {
-      final assets = await PhotoManager.getAssetPathList(type: RequestType.image);
-      if (assets.isNotEmpty) {
-        final assetList = await assets[0].getAssetListRange(start: 0, end: 100); // Adjust the range as needed
-        setState(() {
-          _imageList = assetList;
-        });
-      }
-    }
-  }
-
+class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('iOS 갤러리 조회 '),
+        title: Text('Google ML Kit Demo App'),
+        centerTitle: true,
+        elevation: 0,
       ),
-      body: _imageList == null
-          ? Center(child: CircularProgressIndicator())
-          : GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 4.0,
-          mainAxisSpacing: 4.0,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                      CustomCard('Barcode Scanning', BarcodeScannerView()),
+                ],
+              ),
+            ),
+          ),
         ),
-        itemCount: _imageList!.length,
-        itemBuilder: (context, index) {
-          return ImageItem(assetEntity: _imageList![index]);
-        },
       ),
     );
   }
 }
 
-class ImageItem extends StatelessWidget {
-  final AssetEntity assetEntity;
+class CustomCard extends StatelessWidget {
+  final String _label;
+  final Widget _viewPage;
+  final bool featureCompleted;
 
-  const ImageItem({Key? key, required this.assetEntity}) : super(key: key);
+  const CustomCard(this._label, this._viewPage, {this.featureCompleted = true});
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<File?> (
-      future: assetEntity.file,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
-          return Image.file(snapshot.data!);
-        } else {
-          return Center(child: CircularProgressIndicator());
-        }
-      },
+    return Card(
+      elevation: 5,
+      margin: EdgeInsets.only(bottom: 10),
+      child: ListTile(
+        tileColor: Theme.of(context).primaryColor,
+        title: Text(
+          _label,
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        onTap: () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => _viewPage));
+        },
+      ),
     );
   }
 }
