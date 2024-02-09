@@ -13,6 +13,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Home(),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.yellow),
+        useMaterial3: true,
+      ),
     );
   }
 }
@@ -28,18 +32,13 @@ class Home extends StatelessWidget {
         elevation: 0,
       ),
       body: SafeArea(
-        child: Center(
           child: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: [
                       CustomCard('Barcode Scanning', BarcodeScannerView()),
                 ],
-              ),
             ),
           ),
-        ),
       ),
     );
   }
@@ -58,7 +57,7 @@ class CustomCard extends StatelessWidget {
       elevation: 5,
       margin: EdgeInsets.only(bottom: 10),
       child: ListTile(
-        tileColor: Theme.of(context).primaryColor,
+        tileColor: Color.fromARGB(255, 235, 200, 100),
         title: Text(
           _label,
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
