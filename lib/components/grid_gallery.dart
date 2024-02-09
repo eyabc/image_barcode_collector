@@ -11,7 +11,7 @@ class GridGallery extends StatefulWidget {
 }
 
 class _GridGallery extends State<GridGallery> {
-  List<AssetEntity>? _imageList;
+  List<AssetEntity> _imageList = [];
 
   @override
   void initState() {
@@ -20,18 +20,27 @@ class _GridGallery extends State<GridGallery> {
   }
 
   Future<void> _loadImages() async {
-    final result = await PhotoManager.requestPermissionExtend();
-    if (result == PermissionState.authorized) {
-      final assets =
-          await PhotoManager.getAssetPathList(type: RequestType.image);
-      if (assets.isNotEmpty) {
-        final assetList = await assets[0].getAssetListRange(
-            start: 0, end: 100); // Adjust the range as needed
-        setState(() {
-          _imageList = assetList;
-        });
-      }
+
+    if (await PhotoManager.requestPermissionExtend() != PermissionState.authorized) {
+      return;
     }
+
+    final assets = await PhotoManager.getAssetPathList(type: RequestType.image);
+    if (assets.isEmpty) {
+      return;
+    }
+
+    var offset = 0;
+    const size = 10, end = 100;
+    List<AssetEntity> result = [];
+
+    while(offset < end) {
+      result.addAll(await assets[0].getAssetListRange(start: offset, end: offset += size));
+    }
+
+    setState(() {
+      _imageList = result;
+    });
   }
 
   @override
