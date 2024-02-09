@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_barcode_collector/vision_detector_views/barcode_scanner_view.dart';
-
-
+import 'package:photo_manager/photo_manager.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,11 +19,11 @@ class MyApp extends StatelessWidget {
 
 class Home extends StatelessWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) {경
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Google ML Kit Demo App'),
+        title: Text('Barcode Collector From Gallery'),
         centerTitle: true,
         elevation: 0,
       ),
