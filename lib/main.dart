@@ -19,11 +19,11 @@ class MyApp extends StatelessWidget {
 
 class Home extends StatelessWidget {
   @override
-  Widget build(BuildContext context) {경
+  Widget build(BuildContext context) {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Barcode Collector From Gallery'),
+        title: Text('Barcodes From The Gallery'),
         centerTitle: true,
         elevation: 0,
       ),
