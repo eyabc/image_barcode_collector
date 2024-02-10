@@ -1,8 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:google_ml_kit/google_ml_kit.dart';
-import 'package:photo_manager/photo_manager.dart';
+import 'package:image_barcode_collector/entities/my_image.dart';
+import 'package:image_barcode_collector/entities/my_images.dart';
+import 'package:image_barcode_collector/entities/pageable.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 import 'image_item.dart';
 
@@ -14,71 +14,61 @@ class GridGallery extends StatefulWidget {
 }
 
 class _GridGallery extends State<GridGallery> {
-  List<AssetEntity> _imageList = [];
+  Pageable pageable = Pageable(size: 9, page: 0);
+  MyImages myImages = MyImages();
+
+  final PagingController<int, MyImage> _pagingController = //페이지 번호는 int형으로 받겠다
+  PagingController(firstPageKey: 0); //처음 페이지 설정
 
   @override
   void initState() {
+    _pagingController.addPageRequestListener((pageKey) { //페이지를 가져오는 리스너
+      _loadImages();
+    });
+
     super.initState();
-    _loadImages();
+  }
+
+  Future<MyImages> loadMyImages() async {
+    var myImage = MyImages();
+    await myImage.loadBarcodeImages(pageable);
+    pageable.increasePage();
+    return myImage;
   }
 
   Future<void> _loadImages() async {
-
-    if (await PhotoManager.requestPermissionExtend() != PermissionState.authorized) {
-      return;
+    MyImages result = await loadMyImages();
+    while (result.length() < 9) {
+      result.addMyImages(await loadMyImages());
     }
 
-    final assets = await PhotoManager.getAssetPathList(type: RequestType.image);
-    if (assets.isEmpty) {
-      return;
-    }
-
-    var offset = 0;
-    const size = 100, end = 100;
-    List<AssetEntity> result = [];
-
-    final BarcodeScanner barcodeScanner = BarcodeScanner();
-
-    while(offset < end) {
-      List<Future<List<Barcode>>> task = [];
-
-      var assetList = await assets[0].getAssetListRange(start: offset, end: offset += size);
-
-      List<Future<File?>> fileTask = [];
-      for (AssetEntity entity in assetList) {
-        fileTask.add(entity.file);
-      }
-
-      List<File?> files = await Future.wait(fileTask);
-      for (File? file in files) {
-        task.add(barcodeScanner.processImage(InputImage.fromFile(file!)));
-      }
-
-      List<List<Barcode>> list = await Future.wait(task);
-      for(int i = 0; i< list.length ; i++) {
-        if (list[i].isNotEmpty) {
-          result.add(assetList[i]);
-        }
-      }
-    }
-
-    setState(() {
-      _imageList = result;
-    });
+    _pagingController.appendPage(result.getList(), pageable.page);
   }
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 4.0,
-        mainAxisSpacing: 4.0,
-      ),
-      itemCount: _imageList!.length,
-      itemBuilder: (context, index) {
-        return ImageItem(assetEntity: _imageList![index]);
-      },
+    return RefreshIndicator( //새로고침 package안에 들어있는 키워드
+        onRefresh: () => Future.sync(() => _pagingController.refresh()),
+        //새로고침시 초기화
+        child: PagedGridView<int, MyImage>(
+          pagingController: _pagingController,
+          builderDelegate: PagedChildBuilderDelegate<MyImage>(
+            itemBuilder: (context, item, index) => ImageItem(
+              assetEntity: item.getAssetEntity(),
+            ),
+          ),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 4.0,
+            mainAxisSpacing: 4.0,
+          ),
+        )
     );
+  }
+
+  @override
+  void dispose() {
+    _pagingController.dispose();
+    super.dispose();
   }
 }

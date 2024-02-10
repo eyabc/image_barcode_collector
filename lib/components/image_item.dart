@@ -14,8 +14,7 @@ class ImageItem extends StatelessWidget {
     return FutureBuilder<File?>(
       future: assetEntity.file,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done &&
-            snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
           return GestureDetector(
               onTap: () {
                 Navigator.push(context,
@@ -31,7 +30,7 @@ class ImageItem extends StatelessWidget {
                   ))));
         }
 
-        return const Center(child: CircularProgressIndicator());
+        return const Center();
       },
     );
   }
