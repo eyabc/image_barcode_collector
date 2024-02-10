@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:screen_brightness/screen_brightness.dart';
 import 'package:flutter/material.dart';
 
 class ImageView extends StatelessWidget {
@@ -8,6 +8,8 @@ class ImageView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ScreenBrightness.instance.setScreenBrightness(1.0);
+
     return Scaffold(
         appBar: AppBar(
           title: const Text('Image View'),
