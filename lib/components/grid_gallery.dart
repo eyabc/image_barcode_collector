@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import 'image_item.dart';
@@ -34,8 +37,16 @@ class _GridGallery extends State<GridGallery> {
     const size = 10, end = 100;
     List<AssetEntity> result = [];
 
+    final BarcodeScanner barcodeScanner = BarcodeScanner();
+
     while(offset < end) {
-      result.addAll(await assets[0].getAssetListRange(start: offset, end: offset += size));
+      List<AssetEntity> list = await assets[0].getAssetListRange(start: offset, end: offset += size);
+      for (AssetEntity entity in list) {
+        final barcodeResult = await barcodeScanner.processImage(InputImage.fromFile(await entity.file as File));
+        if (barcodeResult.isNotEmpty) {
+          result.add(entity);
+        }
+      }
     }
 
     setState(() {

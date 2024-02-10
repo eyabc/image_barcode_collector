@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
-import 'package:image/image.dart' as image_dart;
 
 class ImageItem extends StatelessWidget {
   final AssetEntity assetEntity;
