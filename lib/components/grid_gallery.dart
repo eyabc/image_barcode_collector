@@ -38,8 +38,13 @@ class _GridGallery extends State<GridGallery> {
 
   Future<void> _loadImages() async {
     MyImages result = await loadMyImages();
-    while (result.length() < 9) {
+    while (result.length() < 3 && pageable.page < 1000) {
       result.addMyImages(await loadMyImages());
+    }
+
+    if (pageable.page > 1000) {
+      _pagingController.appendLastPage(result.getList());
+      return;
     }
 
     _pagingController.appendPage(result.getList(), pageable.page);

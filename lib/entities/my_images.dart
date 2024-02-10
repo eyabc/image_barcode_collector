@@ -29,7 +29,7 @@ class MyImages {
       return;
     }
 
-    final assetList = await assets[0].getAssetListRange(start: pageable.offset(), end: pageable.offset() + pageable.size);
+    final assetList = await assets[0].getAssetListPaged(page: pageable.page, size: pageable.size);
     List<Future<File?>> fileTask = [];
     for (AssetEntity entity in assetList) {
       fileTask.add(entity.file);
