@@ -34,17 +34,23 @@ class _GridGallery extends State<GridGallery> {
     }
 
     var offset = 0;
-    const size = 10, end = 100;
+    const size = 100, end = 500;
     List<AssetEntity> result = [];
 
     final BarcodeScanner barcodeScanner = BarcodeScanner();
 
-    while(offset < end) {
-      List<AssetEntity> list = await assets[0].getAssetListRange(start: offset, end: offset += size);
-      for (AssetEntity entity in list) {
-        final barcodeResult = await barcodeScanner.processImage(InputImage.fromFile(await entity.file as File));
-        if (barcodeResult.isNotEmpty) {
-          result.add(entity);
+    while(offset < end || result.length > 20) {
+      List<Future<List<Barcode>>> task = [];
+
+      var assetList = await assets[0].getAssetListRange(start: offset, end: offset += size);
+      for (AssetEntity entity in assetList) {
+        task.add(barcodeScanner.processImage(InputImage.fromFile(await entity.file as File)));
+      }
+
+      List<List<Barcode>> list = await Future.wait(task as Iterable<Future<List<Barcode>>>);
+      for(int i = 0; i< list.length ; i++) {
+        if (list[i].isNotEmpty) {
+          result.add(assetList[i]);
         }
       }
     }
