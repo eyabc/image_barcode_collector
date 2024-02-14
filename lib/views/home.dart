@@ -16,7 +16,7 @@ class Home extends StatelessWidget {
       ),
       body: const GridGallery(),
       bottomNavigationBar: const BottomAppBar(
-        child: ProgressBar(),
+        child: ProgressBar(leading: 1, trailing: 1000),
       ),
     );
   }
