@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_barcode_collector/components/progress_bar.dart';
 import '../components/grid_gallery.dart';
 
 class Home extends StatelessWidget {
@@ -13,7 +14,10 @@ class Home extends StatelessWidget {
         centerTitle: true,
         elevation: 0,
       ),
-      body: const GridGallery()
+      body: const GridGallery(),
+      bottomNavigationBar: const BottomAppBar(
+        child: ProgressBar(),
+      ),
     );
   }
 }
