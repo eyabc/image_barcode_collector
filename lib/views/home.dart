@@ -17,17 +17,11 @@ class Home extends StatelessWidget {
         ),
         body: BlocBuilder<ImageCubit, ImageState>(builder: (context, state) {
           return GridGallery(
-              onLoadHandler: BlocProvider.of<ImageCubit>(context).setTotalLoadingCount
-          );
+              onLoadHandler:
+                  BlocProvider.of<ImageCubit>(context).setTotalLoadingCount);
         }),
-        bottomNavigationBar: BlocBuilder<ImageCubit, ImageState>(
-          builder: (context, state) {
-            return BottomAppBar(
-                child: ProgressBar(
-                    leading: state.totalLoadingCount,
-                    trailing: ImageState.lastCount,
-                    ));
-          },
+        bottomNavigationBar: const BottomAppBar(
+          child: ProgressBar(),
         ));
   }
 }

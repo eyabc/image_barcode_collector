@@ -2,11 +2,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ImageState {
 
-  final int totalLoadingCount;
+  final int imageCount;
 
   static const int lastCount = 1000;
 
-  ImageState(this.totalLoadingCount);
+  ImageState(this.imageCount);
 
 }
 
