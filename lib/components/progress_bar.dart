@@ -13,11 +13,12 @@ class ProgressBar extends StatelessWidget {
         animation: true,
         animationDuration: 1000,
         lineHeight: 20.0,
-        percent: leading / trailing * 100,
+        percent: leading / trailing,
         center: Text(leading.toString() + " / " + trailing.toString()),
         barRadius: Radius.circular(5),
         progressColor: Colors.amberAccent,
       ),
     );
   }
+
 }

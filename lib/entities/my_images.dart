@@ -17,16 +17,16 @@ class MyImages {
     return _list.map((e) => e.getAssetEntity()).toList();
   }
 
-  Future<void> loadBarcodeImages(Pageable pageable) async {
+  Future<MyImages> loadBarcodeImages(Pageable pageable) async {
     List<AssetEntity> result = [];
 
     if (await checkImageAccessPermission()) {
-      return;
+      return MyImages();
     }
 
     final assets = await getElbumList();
     if (assets.isEmpty) {
-      return;
+      return MyImages();
     }
 
     final assetList = await assets[0].getAssetListPaged(page: pageable.page, size: pageable.size);
@@ -50,6 +50,10 @@ class MyImages {
     }
 
     addAll(result);
+
+    var myImages = MyImages();
+    myImages.addAll(result);
+    return myImages;
   }
 
   Future<List<AssetPathEntity>> getElbumList() async => await PhotoManager.getAssetPathList(type: RequestType.image);

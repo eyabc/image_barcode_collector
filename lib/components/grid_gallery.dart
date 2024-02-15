@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:image_barcode_collector/entities/my_image.dart';
 import 'package:image_barcode_collector/entities/my_images.dart';
@@ -7,18 +8,22 @@ import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'image_item.dart';
 
 class GridGallery extends StatefulWidget {
-  const GridGallery({super.key});
+  final Function onLoadHandler;
+  GridGallery({super.key, required this.onLoadHandler });
 
   @override
-  State<GridGallery> createState() => _GridGallery();
+  State<GridGallery> createState() => _GridGallery(onLoadHandler);
 }
 
 class _GridGallery extends State<GridGallery> {
   Pageable pageable = Pageable(size: 9, page: 0);
-  MyImages myImages = MyImages();
+  MyImages images = MyImages();
+  final Function onLoadHandler;
 
   final PagingController<int, MyImage> _pagingController = //페이지 번호는 int형으로 받겠다
-  PagingController(firstPageKey: 0); //처음 페이지 설정
+  PagingController(firstPageKey: 0);
+
+  _GridGallery(this.onLoadHandler);
 
   @override
   void initState() {
@@ -30,10 +35,10 @@ class _GridGallery extends State<GridGallery> {
   }
 
   Future<MyImages> loadMyImages() async {
-    var myImage = MyImages();
-    await myImage.loadBarcodeImages(pageable);
+    var myImages = await images.loadBarcodeImages(pageable);
     pageable.increasePage();
-    return myImage;
+    onLoadHandler(pageable.offset());
+    return myImages;
   }
 
   Future<void> _loadImages() async {
