@@ -18,8 +18,8 @@ class ProgressBar extends StatelessWidget {
               return LinearPercentIndicator(
                   lineHeight: 20.0,
                   percent: state.imageCount / trailing,
-                  center: Text(state.imageCount.toString() + " / " + trailing.toString()),
-                  barRadius: Radius.circular(5),
+                  center: Text("${state.imageCount} / $trailing"),
+                  barRadius: const Radius.circular(5),
                   progressColor: Colors.amberAccent
               );
             }

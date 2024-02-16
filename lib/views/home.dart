@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_barcode_collector/components/progress_bar.dart';
 import '../components/grid_gallery.dart';
-import '../states/image_state.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -15,11 +13,7 @@ class Home extends StatelessWidget {
           centerTitle: true,
           elevation: 0,
         ),
-        body: BlocBuilder<ImageCubit, ImageState>(builder: (context, state) {
-          return GridGallery(
-              onLoadHandler:
-                  BlocProvider.of<ImageCubit>(context).setTotalLoadingCount);
-        }),
+        body: const GridGallery(),
         bottomNavigationBar: const BottomAppBar(
           child: ProgressBar(),
         ));
