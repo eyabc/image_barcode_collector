@@ -18,7 +18,6 @@ class GridGallery extends StatefulWidget {
 
 class _GridGallery extends State<GridGallery> {
   Pageable pageable = Pageable(size: 9, page: 0);
-  MyImages images = MyImages();
 
   final PagingController<int, MyImage> _pagingController = //페이지 번호는 int형으로 받겠다
   PagingController(firstPageKey: 0);
@@ -35,7 +34,7 @@ class _GridGallery extends State<GridGallery> {
   }
 
   Future<MyImages> loadMyImages() async {
-    var myImages = await images.loadBarcodeImages(pageable);
+    var myImages = MyImages().loadBarcodeImages(pageable);
     BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(pageable.offset());
     pageable.increasePage();
     return myImages;
