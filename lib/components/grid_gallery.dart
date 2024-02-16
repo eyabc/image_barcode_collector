@@ -57,10 +57,7 @@ class _GridGallery extends State<GridGallery> {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator( //새로고침 package안에 들어있는 키워드
-        onRefresh: () => Future.sync(() => _pagingController.refresh()),
-        //새로고침시 초기화
-        child: PagedGridView<int, MyImage>(
+    return PagedGridView<int, MyImage>(
           pagingController: _pagingController,
           builderDelegate: PagedChildBuilderDelegate<MyImage>(
             itemBuilder: (context, item, index) => ImageItem(
@@ -72,8 +69,7 @@ class _GridGallery extends State<GridGallery> {
             crossAxisSpacing: 4.0,
             mainAxisSpacing: 4.0,
           ),
-        )
-    );
+        );
   }
 
   @override
