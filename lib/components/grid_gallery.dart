@@ -83,7 +83,7 @@ class _GridGallery extends State<GridGallery> {
           pagingController: _pagingController,
           builderDelegate: PagedChildBuilderDelegate<MyImage>(
             itemBuilder: (context, item, index) => ImageItem(
-              assetEntity: item.getAssetEntity(),
+              myImage: item,
             ),
           ),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
