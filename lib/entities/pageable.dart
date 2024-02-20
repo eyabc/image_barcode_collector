@@ -9,6 +9,10 @@ class Pageable {
     return (page) * size;
   }
 
+  int nextOffset() {
+    return (page) * size + size;
+  }
+
   void increasePage() {
     page += 1;
   }

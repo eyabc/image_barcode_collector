@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:image_barcode_collector/entities/pageable.dart';
 import 'package:photo_manager/photo_manager.dart';
 
@@ -9,11 +9,21 @@ import 'my_image.dart';
 class MyImages {
   final List<MyImage> _list = [];
 
+  static MyImages of(List<String> stringList) {
+    var result = MyImages();
+    List<MyImage> list = [];
+    for (String id in stringList) {
+      list.add(MyImage.of(id));
+    }
+    result.addAllMyImages(list);
+    return result;
+  }
+
   List<MyImage> getList() {
     return List.unmodifiable(_list);
   }
 
-  List<AssetEntity> getEntities() {
+  List<AssetEntity?> getEntities() {
     return _list.map((e) => e.getAssetEntity()).toList();
   }
 
@@ -64,8 +74,13 @@ class MyImages {
   }
 
   void addAll(List<AssetEntity> result) {
-    _list.addAll(result.map((e) => MyImage(e)));
+    _list.addAll(result.map((e) => MyImage.ofAssetEntity(e)));
   }
+
+  void addAllMyImages(List<MyImage> result) {
+    _list.addAll(result);
+  }
+
 
   void addMyImages(MyImages myImages) {
     _list.addAll(myImages._list);
@@ -75,7 +90,31 @@ class MyImages {
     return _list.length;
   }
 
+  isEmpty() {
+    return _list.isEmpty;
+  }
+
   getIndex(int index) {
     return _list[index];
   }
+
+  List<String> toStringList() {
+    List<String> result = [];
+    for (MyImage myImage in _list) {
+      result.add(myImage.getId());
+    }
+    return result;
+  }
+
+  MyImages sublist(Pageable pageable) {
+    var result = MyImages();
+
+    if (_list.length <= pageable.nextOffset()) {
+      return result;
+    }
+
+    result.addAllMyImages(_list.sublist(pageable.offset(), pageable.nextOffset()));
+    return result;
+  }
+
 }

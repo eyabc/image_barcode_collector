@@ -2,14 +2,37 @@ import 'package:photo_manager/src/types/entity.dart';
 
 class MyImage {
 
-  late final AssetEntity _assetEntity;
+  late AssetEntity? _assetEntity;
+  late String _id;
 
-  MyImage(AssetEntity e) {
-    _assetEntity = e;
+  MyImage({ required String id, AssetEntity? assetEntity }) {
+    _assetEntity = assetEntity;
+    _id = id;
   }
 
-  AssetEntity getAssetEntity() {
+  String getId() {
+    return _id;
+  }
+
+
+  static of(String id) {
+    var myImage = MyImage(id: id);
+    myImage._id = id;
+    myImage._assetEntity = AssetEntity(id: id, typeInt: 0,
+      width: 100,
+      height: 100);
+    return myImage;
+  }
+
+  static ofAssetEntity(AssetEntity assetEntity) {
+    var myImage = MyImage(assetEntity: assetEntity, id: assetEntity.id);
+    return myImage;
+  }
+
+
+  AssetEntity? getAssetEntity() {
     return _assetEntity;
   }
+
 
 }
