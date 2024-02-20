@@ -18,8 +18,8 @@ class GridGallery extends StatefulWidget {
 }
 
 class _GridGallery extends State<GridGallery> {
-  Pageable pageable = Pageable(size: 9, page: -1);
-  Pageable pageableOfStorage = Pageable(size: 12, page: 0);
+  Pageable pageable = Pageable(size: 9, page: 0);
+  Pageable pageableOfStorage = Pageable(size: 12, page: -1);
 
   final PagingController<int, MyImage> _pagingController = //페이지 번호는 int형으로 받겠다
   PagingController(firstPageKey: 0);
@@ -42,7 +42,7 @@ class _GridGallery extends State<GridGallery> {
       return;
     }
 
-    await _loadImages(myImages, pageableOfStorage, loadMyImages);
+    await _loadImages(myImages, pageable, loadMyImages);
 
   }
 
@@ -70,6 +70,7 @@ class _GridGallery extends State<GridGallery> {
 
     if (pageable.offset() >= 1000) {
       _pagingController.appendLastPage(myImages.getList());
+      ImageStorage.setLastPage(pageable.page);
       return;
     }
 
