@@ -7,15 +7,29 @@ import 'package:photo_manager/photo_manager.dart';
 import 'my_image.dart';
 
 class MyImages {
-  final List<MyImage> _list = [];
+  final Set<MyImage> _list = {};
+
+  static MyImages ofEmpty() {
+    return MyImages();
+  }
+
+  static MyImages ofMyImages(List<MyImage> myImages) {
+    var result = ofEmpty();
+    result._list.addAll(myImages);
+    return result;
+  }
+
+  static MyImages ofMyImagesSet(Set<MyImage> myImages) {
+    var result = ofEmpty();
+    result._list.addAll(myImages);
+    return result;
+  }
 
   static MyImages of(List<String> stringList) {
-    var result = MyImages();
-    List<MyImage> list = [];
+    var result = ofEmpty();
     for (String id in stringList) {
-      list.add(MyImage.of(id));
+      result._list.add(MyImage.of(id));
     }
-    result.addAllMyImages(list);
     return result;
   }
 
@@ -23,20 +37,14 @@ class MyImages {
     return List.unmodifiable(_list);
   }
 
-  List<AssetEntity?> getEntities() {
-    return _list.map((e) => e.getAssetEntity()).toList();
-  }
-
   Future<MyImages> loadBarcodeImages(Pageable pageable) async {
-    List<AssetEntity> result = [];
-
     if (await checkImageAccessPermission()) {
-      return MyImages();
+      return ofEmpty();
     }
 
-    final assets = await getElbumList();
+    final assets = await _getElbumList();
     if (assets.isEmpty) {
-      return MyImages();
+      return ofEmpty();
     }
 
     final assetList = await assets[0].getAssetListPaged(page: pageable.page, size: pageable.size);
@@ -53,36 +61,33 @@ class MyImages {
     }
 
     List<List<Barcode>> list = await Future.wait(task);
+    MyImages result = ofEmpty();
     for (int i = 0; i < list.length; i++) {
       if (list[i].isNotEmpty) {
-        result.add(assetList[i]);
+        result._list.add(MyImage.ofAssetEntity(assetList[i]));
       }
     }
 
-    addAll(result);
-
-    var myImages = MyImages();
-    myImages.addAll(result);
-    return myImages;
+    return result;
   }
 
-  Future<List<AssetPathEntity>> getElbumList() async => await PhotoManager.getAssetPathList(type: RequestType.image);
+  Future<List<AssetPathEntity>> _getElbumList() async => await PhotoManager.getAssetPathList(type: RequestType.image);
 
   Future<bool> checkImageAccessPermission() async {
     return await PhotoManager.requestPermissionExtend() !=
       PermissionState.authorized;
   }
 
-  void addAll(List<AssetEntity> result) {
-    _list.addAll(result.map((e) => MyImage.ofAssetEntity(e)));
-  }
-
   void addAllMyImages(List<MyImage> result) {
     _list.addAll(result);
   }
 
+  MyImages diffMyImages(MyImages myImages) {
+    return ofMyImagesSet(myImages._list.difference(_list));
+  }
 
-  void addMyImages(MyImages myImages) {
+  // 일급함수로 만들어볼것
+  addMyImages(MyImages myImages) {
     _list.addAll(myImages._list);
   }
 
@@ -95,7 +100,7 @@ class MyImages {
   }
 
   getIndex(int index) {
-    return _list[index];
+    return _list.elementAt(index);
   }
 
   List<String> toStringList() {
@@ -107,14 +112,11 @@ class MyImages {
   }
 
   MyImages sublist(Pageable pageable) {
-    var result = MyImages();
-
     if (_list.length <= pageable.nextOffset()) {
-      return result;
+      return ofEmpty();
     }
 
-    result.addAllMyImages(_list.sublist(pageable.offset(), pageable.nextOffset()));
-    return result;
+    return ofMyImages(_list.toList().sublist(pageable.offset(), pageable.nextOffset()));
   }
 
 }

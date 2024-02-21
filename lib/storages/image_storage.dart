@@ -17,11 +17,14 @@ class ImageStorage {
     return (await getImages()).sublist(pageable);
   }
 
-  static Future<void> addImages(MyImages myImages) async {
+  static Future<MyImages> addImages(MyImages myImages) async {
     MyImages value = await getImages();
+    var diff = value.diffMyImages(myImages);
     value.addMyImages(myImages);
     final prefs = await SharedPreferences.getInstance();
     prefs.setStringList(_KEY_NAME_IMAGE, value.toStringList());
+    // 추가에 성공한 리스트 리턴
+    return diff;
   }
 
   static Future<int> size() async {

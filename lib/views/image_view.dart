@@ -12,9 +12,13 @@ class ImageView extends StatelessWidget {
   Widget build(BuildContext context) {
     ScreenBrightness.instance.setScreenBrightness(1.0);
 
-    return FutureBuilder<File?>(
+    return FutureBuilder<File?> (
         future: myImage?.getAssetEntity()?.file,
         builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done || !snapshot.hasData) {
+            return const Center();
+          }
+
           return Scaffold(
             appBar: AppBar(
               title: const Text('Image View'),
