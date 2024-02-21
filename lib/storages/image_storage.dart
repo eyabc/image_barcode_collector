@@ -8,6 +8,7 @@ class ImageStorage {
   static const String _KEY_NAME_IMAGE = "image";
   static const String _KEY_NAME_LAST_PAGE = "image:last-page";
 
+
   static Future<MyImages> getImages() async {
     final prefs = await SharedPreferences.getInstance();
     return MyImages.of(prefs.getStringList(_KEY_NAME_IMAGE) ?? []);
@@ -41,5 +42,6 @@ class ImageStorage {
     final prefs = await SharedPreferences.getInstance();
     prefs.setInt(_KEY_NAME_LAST_PAGE, page);
   }
+
 
 }

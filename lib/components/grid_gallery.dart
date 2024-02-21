@@ -10,6 +10,7 @@ import '../states/image_state.dart';
 import 'image_item.dart';
 
 class GridGallery extends StatefulWidget {
+
   const GridGallery({super.key});
 
   @override
@@ -69,14 +70,16 @@ class _GridGallery extends State<GridGallery> {
     }
 
     while (
-        myImages.length() < 3 && pageable.offset() <= (1000 - pageable.size)) {
+        myImages.length() < 3 && pageable.offset() <= (MyImages.getAssetCount() - pageable.size)) {
       myImages.addMyImages(await loadFunc());
       pageable.increasePage();
     }
 
-    if (pageable.offset() >= 999) {
+    if (pageable.offset() >= (MyImages.getAssetCount() - pageable.size)) {
       _pagingController.appendLastPage(myImages.getList());
       ImageStorage.setLastPage(pageable.page);
+      BlocProvider.of<ImageCubit>(context)
+          .setTotalLoadingCount(MyImages.getAssetCount());
       return;
     }
 

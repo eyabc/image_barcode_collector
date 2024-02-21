@@ -8,6 +8,7 @@ import 'my_image.dart';
 
 class MyImages {
   final Set<MyImage> _list = {};
+  static int assetCount = -1;
 
   static MyImages ofEmpty() {
     return MyImages();
@@ -37,6 +38,16 @@ class MyImages {
     return List.unmodifiable(_list);
   }
 
+  static Future<void> loadAssetCount() async {
+    final assets = await _getElbumList();
+    assetCount = await (await assets[0] as AssetPathEntity).assetCountAsync;
+  }
+
+  static int getAssetCount() {
+    return assetCount;
+  }
+
+  // 분리
   Future<MyImages> loadBarcodeImages(Pageable pageable) async {
     if (await checkImageAccessPermission()) {
       return ofEmpty();
@@ -71,7 +82,7 @@ class MyImages {
     return result;
   }
 
-  Future<List<AssetPathEntity>> _getElbumList() async => await PhotoManager.getAssetPathList(type: RequestType.image);
+  static Future<List<AssetPathEntity>> _getElbumList() async => await PhotoManager.getAssetPathList(type: RequestType.image);
 
   Future<bool> checkImageAccessPermission() async {
     return await PhotoManager.requestPermissionExtend() !=
