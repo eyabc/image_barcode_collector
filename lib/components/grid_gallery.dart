@@ -74,7 +74,7 @@ class _GridGallery extends State<GridGallery> {
       pageable.increasePage();
     }
 
-    if (pageable.offset() >= 1000) {
+    if (pageable.offset() >= 999) {
       _pagingController.appendLastPage(myImages.getList());
       ImageStorage.setLastPage(pageable.page);
       return;
