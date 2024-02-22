@@ -26,10 +26,12 @@ class MyImages {
     return result;
   }
 
-  static MyImages of(List<String> stringList) {
+  static of(List<String> stringList) async {
     var result = ofEmpty();
     for (String id in stringList) {
-      result._list.add(MyImage.of(id));
+      await MyImage.of(id).then((res) =>
+          result._list.add(res)
+      );
     }
     return result;
   }
@@ -128,6 +130,13 @@ class MyImages {
     }
 
     return ofMyImages(_list.toList().sublist(pageable.offset(), pageable.nextOffset()));
+  }
+
+  // immutable
+  MyImages sortByCreatedTime() {
+    List<MyImage> result = _list.toList();
+    result.sort((a, b) => a.getCreateDateSecond() - b.getCreateDateSecond());
+    return MyImages.ofMyImages(result);
   }
 
 }

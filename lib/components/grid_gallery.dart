@@ -36,13 +36,22 @@ class _GridGallery extends State<GridGallery> {
     super.initState();
   }
 
+  // 과거 이미지 로드기능 추가
+  // 신규 이미지 로드기능 보완
+
   Future<void> load() async {
+    if (pageable.page == 0) {
+      var offset = await ImageStorage.getLastOffset();
+      pageable = pageable.setOffset(offset);
+      BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(offset);
+    }
+
     MyImages myImages = await loadFromStorage();
     if (!myImages.isEmpty()) {
       await _loadImages(myImages, pageableOfStorage, loadFromStorage);
       return;
     }
-
+    
     await _loadImages(myImages, pageable, loadMyImages);
   }
 
@@ -77,7 +86,7 @@ class _GridGallery extends State<GridGallery> {
 
     if (pageable.offset() >= (MyImages.getAssetCount() - pageable.size)) {
       _pagingController.appendLastPage(myImages.getList());
-      ImageStorage.setLastPage(pageable.page);
+      ImageStorage.setLastOffset(pageable.offset());
       BlocProvider.of<ImageCubit>(context)
           .setTotalLoadingCount(MyImages.getAssetCount());
       return;

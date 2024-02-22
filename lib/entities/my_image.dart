@@ -2,36 +2,37 @@ import 'package:photo_manager/src/types/entity.dart';
 
 class MyImage {
 
-  late AssetEntity? _assetEntity;
+  final AssetEntity _assetEntity;
   late String _id;
+  late int _createDateSecond;
+  late DateTime createDateTime;
 
-  MyImage({ required String id, AssetEntity? assetEntity }) {
-    _assetEntity = assetEntity;
-    _id = id;
+  MyImage(this._assetEntity){
+    createDateTime = _assetEntity.createDateTime;
+    _createDateSecond = _assetEntity.createDateSecond ?? 0;
+    _id = _assetEntity.id;
   }
 
   String getId() {
     return _id;
   }
 
+  AssetEntity getAssetEntity() {
+    return _assetEntity;
+  }
 
-  static of(String id) {
-    var myImage = MyImage(id: id);
-    myImage._id = id;
-    myImage._assetEntity = AssetEntity(id: id, typeInt: 0,
-      width: 100,
-      height: 100);
+  int getCreateDateSecond() {
+    return _createDateSecond;
+  }
+
+  static of(String id) async {
+    AssetEntity assetEntity = await AssetEntity.fromId(id) ?? AssetEntity(id: id, typeInt: 0, width: 100, height: 100);
+    var myImage = MyImage(assetEntity);
     return myImage;
   }
 
   static ofAssetEntity(AssetEntity assetEntity) {
-    var myImage = MyImage(assetEntity: assetEntity, id: assetEntity.id);
-    return myImage;
-  }
-
-
-  AssetEntity? getAssetEntity() {
-    return _assetEntity;
+    return MyImage(assetEntity);
   }
 
   @override

@@ -31,7 +31,7 @@ class ImageItem extends StatelessWidget {
                   ))));
         }
 
-        return const Center();
+        return const Text("");
       },
     );
   }

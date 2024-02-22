@@ -17,4 +17,9 @@ class Pageable {
     page += 1;
   }
 
+  Pageable setOffset(int offset) {
+    return Pageable(size: size, page: offset ~/ size);
+  }
+
+
 }

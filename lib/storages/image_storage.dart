@@ -6,12 +6,16 @@ class ImageStorage {
 
   // 키가 커지면 샤딩해서 가져오기로 변경
   static const String _KEY_NAME_IMAGE = "image";
-  static const String _KEY_NAME_LAST_PAGE = "image:last-page";
+  static const String _KEY_NAME_LAST_OFFSET = "image:last-offset";
 
+  static Future<void> clear() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.clear();
+  }
 
   static Future<MyImages> getImages() async {
     final prefs = await SharedPreferences.getInstance();
-    return MyImages.of(prefs.getStringList(_KEY_NAME_IMAGE) ?? []);
+    return await MyImages.of(prefs.getStringList(_KEY_NAME_IMAGE) ?? []);
   }
 
   static Future<MyImages> getImagesByPage(Pageable pageable) async {
@@ -28,19 +32,32 @@ class ImageStorage {
     return diff;
   }
 
+  static Future<MyImages> setImages(MyImages myImages) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setStringList(_KEY_NAME_IMAGE, myImages.toStringList());
+    // 추가에 성공한 리스트 리턴
+    return myImages;
+  }
+
   static Future<int> size() async {
     MyImages myImages = await getImages();
     return myImages.length();
   }
 
-  static Future<int> getLastPage() async {
+  static Future<int> getLastOffset() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_KEY_NAME_LAST_PAGE) ?? 0;
+    return prefs.getInt(_KEY_NAME_LAST_OFFSET) ?? 0;
   }
 
-  static Future<void> setLastPage(int page) async {
+  static Future<void> setLastOffset(int offset) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setInt(_KEY_NAME_LAST_PAGE, page);
+    prefs.setInt(_KEY_NAME_LAST_OFFSET, offset);
+  }
+
+  static Future<void> sortImagesByCreatedTime() async {
+    MyImages myImages = await getImages();
+    myImages.sortByCreatedTime();
+    setImages(myImages);
   }
 
 
