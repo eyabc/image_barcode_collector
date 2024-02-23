@@ -12,19 +12,17 @@ class ProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int trailing = MyImages.getAssetCount();
-
-    return FutureBuilder<bool?>(
-        future: ComponentViewStorage.isShowProgressBar(),
+    return FutureBuilder<List?>(
+        future: Future.wait([ComponentViewStorage.isShowProgressBar()]),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
-            return snapshot.data ?? false ? BlocConsumer<ImageCubit, ImageState>(
+            return snapshot.data?[0] ?? false ? BlocConsumer<ImageCubit, ImageState>(
                 listener: (context, state) {},
                 builder: (context, state) {
                   return LinearPercentIndicator(
                       lineHeight: 20.0,
-                      percent: state.imageCount / trailing,
-                      center: Text("${state.imageCount} / $trailing"),
+                      percent: state.imageCount / MyImages.getAssetCount(),
+                      center: Text("${state.imageCount} / ${MyImages.getAssetCount()}"),
                       barRadius: const Radius.circular(5),
                       progressColor: Colors.amberAccent);
                 }) : const Text("최근 이미지 스캔 완료");

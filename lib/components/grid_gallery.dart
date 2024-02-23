@@ -4,113 +4,151 @@ import 'package:image_barcode_collector/entities/my_image.dart';
 import 'package:image_barcode_collector/entities/my_images.dart';
 import 'package:image_barcode_collector/entities/pageable.dart';
 import 'package:image_barcode_collector/storages/image_storage.dart';
+import 'package:image_barcode_collector/views/home.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:photo_manager/photo_manager.dart';
 
 import '../states/image_state.dart';
 import 'image_item.dart';
 
 class GridGallery extends StatefulWidget {
-
   const GridGallery({super.key});
 
   @override
   State<GridGallery> createState() => _GridGallery();
 }
 
-class _GridGallery extends State<GridGallery> {
-  Pageable pageable = Pageable(size: 9, page: 0);
-  Pageable pageableOfStorage = Pageable(size: 12, page: 0);
+const int loadSizeOfStorage = 12;
 
-  final PagingController<int, MyImage> _pagingController = //페이지 번호는 int형으로 받겠다
-      PagingController(firstPageKey: 0);
+class ImagesFromStorage {
+  final Pageable _pageable = Pageable(size: loadSizeOfStorage, page: 0);
+
+  Future<MyImages> load() async {
+    MyImages myImages = await imageStorage.getImagesByPage(_pageable);
+    _pageable.increasePage();
+    return myImages;
+  }
+}
+
+// 앨범에서 스캔할 파일 수
+const int loadSizeOfElbum = 9;
+// 앨범에서 가져온 바코드 이미지수가 최소 3개가 되어야 렌더링 된다. 그 이하면 더 불러온다
+const int minSizeOfRendering = 3;
+
+class ImagesFromElbum {
+  final Pageable _pageable = Pageable(size: loadSizeOfElbum, page: 0);
+  bool scannedImageLoaded = false;
+
+  Future<MyImages> load(MyImages scannedImageCache) async {
+    var loadedImages = await MyImages.ofEmpty().loadAssetListByPageable(_pageable);
+
+    if (scannedImageCache.isEmpty() && !scannedImageLoaded) {
+      // 일급함수가 아님
+      scannedImageCache.addMyImages(await scannedImageStorage.getImages());
+      scannedImageLoaded = true;
+    }
+
+    MyImages notScannedImages = loadedImages.filterNotIn(scannedImageCache);
+    MyImages result = await notScannedImages.filterBarcodeImages();
+
+    scannedImageStorage.addImages(loadedImages);
+    _pageable.increasePage();
+    // 신규로 불러온 이미지는 저장소에 동기화
+    if (!result.isEmpty()) {
+      return await imageStorage.addImages(result);
+    }
+
+    return MyImages.ofEmpty();
+  }
+}
+
+// todo background reload 와 foregrond 리로드는 storage 가 비었을때만 수행 refresh 는 없애기
+class _GridGallery extends State<GridGallery> {
+  final PagingController<int, MyImage> _pagingController = PagingController(firstPageKey: 0);
+  late ImagesFromStorage storageImages = ImagesFromStorage();
+  late ImagesFromElbum elbumImages = ImagesFromElbum();
+  static MyImages scannedImageCache = MyImages.ofEmpty();
 
   _GridGallery();
 
   @override
   void initState() {
-    _pagingController.addPageRequestListener((pageKey) {
-      //페이지를 가져오는 리스너
-      load();
-    });
-
+    _pagingController.addPageRequestListener((pageKey) => _load());
     super.initState();
   }
 
   // 과거 이미지 로드기능 추가
   // 신규 이미지 로드기능 보완
-
-  Future<void> load() async {
-    if (pageable.page == 0) {
-      var offset = await ImageStorage.getLastOffset();
-      pageable = pageable.setOffset(offset);
-      BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(offset);
-    }
-
-    MyImages myImages = await loadFromStorage();
-    if (!myImages.isEmpty()) {
-      await _loadImages(myImages, pageableOfStorage, loadFromStorage);
+  Future<void> _load() async {
+    if (await PhotoManager.requestPermissionExtend() != PermissionState.authorized) {
+      // todo 권한설정 요청 alert 추가
+      _pagingController.appendLastPage([]);
       return;
     }
-    
-    await _loadImages(myImages, pageable, loadMyImages);
-  }
-
-  Future<MyImages> loadFromStorage() async {
-    return await ImageStorage.getImagesByPage(pageableOfStorage);
-  }
-
-  Future<MyImages> loadMyImages() async {
-    // 새로 파일에서 가져왔을 떄
-    var myImages = await MyImages().loadBarcodeImages(pageable);
-    BlocProvider.of<ImageCubit>(context)
-        .setTotalLoadingCount(pageable.offset());
-
-    if (!myImages.isEmpty()) {
-      return await ImageStorage.addImages(myImages);
-    }
-    return MyImages.ofEmpty();
-  }
-
-  Future<void> _loadImages(MyImages myImages, Pageable pageable,
-      Future<MyImages> Function() loadFunc) async {
-
-    if (myImages.length() >= 3) {
-      pageable.increasePage();
+    /**
+     * imagesFromStorage == 0  -> 앨범에서 로드하도록
+     * imagesFromStorage == loadSizeOfStorage -> 스토리지에서 더 불러온다.
+     * 0 < imagesFromStorage 개수 < loadSizeOfStorage -> 마지막 페이지로 인식하고 앨범에서 로드하도록 한다.
+     */
+    MyImages imagesFromStorage = await storageImages.load();
+    if (imagesFromStorage.length() == loadSizeOfStorage) {
+      _pagingController.appendPage(
+          imagesFromStorage.getList(), storageImages._pageable.page);
+      return;
     }
 
-    while (
-        myImages.length() < 3 && pageable.offset() <= (MyImages.getAssetCount() - pageable.size)) {
-      myImages.addMyImages(await loadFunc());
-      pageable.increasePage();
+    if (0 < imagesFromStorage.length() &&
+        imagesFromStorage.length() < loadSizeOfStorage) {
+      _pagingController.appendPage(
+          imagesFromStorage.getList(), storageImages._pageable.page);
     }
 
-    if (pageable.offset() >= (MyImages.getAssetCount() - pageable.size)) {
-      _pagingController.appendLastPage(myImages.getList());
-      ImageStorage.setLastOffset(pageable.offset());
+    MyImages myImagesFromElbum = await elbumImages.load(scannedImageCache);
+    while (myImagesFromElbum.length() < minSizeOfRendering &&
+        elbumImages._pageable.offset() <= (MyImages.getAssetCount() - elbumImages._pageable.size)) {
+      myImagesFromElbum.addMyImages(await elbumImages.load(scannedImageCache));
       BlocProvider.of<ImageCubit>(context)
-          .setTotalLoadingCount(MyImages.getAssetCount());
+          .setTotalLoadingCount(elbumImages._pageable.offset());
+    }
+
+    if (myImagesFromElbum.length() == 0) {
+      _pagingController.appendLastPage(myImagesFromElbum.getList());
+      BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(MyImages.getAssetCount());
       return;
     }
 
+    _pagingController.appendPage(
+        myImagesFromElbum.getList(), elbumImages._pageable.page);
+  }
 
-    _pagingController.appendPage(myImages.getList(), pageable.page);
+  void refresh() async {
+    await HomeRefresher.refresh();
+    storageImages = ImagesFromStorage();
+    elbumImages = ImagesFromElbum();
+    BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(0);
+    scannedImageCache = await scannedImageStorage.getImages();
+    _pagingController.refresh();
   }
 
   @override
   Widget build(BuildContext context) {
-    return PagedGridView<int, MyImage>(
-      pagingController: _pagingController,
-      builderDelegate: PagedChildBuilderDelegate<MyImage>(
-        itemBuilder: (context, item, index) => ImageItem(
-          myImage: item,
-        ),
-      ),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 4.0,
-        mainAxisSpacing: 4.0,
-      ),
-    );
+    return RefreshIndicator(
+        //새로고침 package안에 들어있는 키워드
+        onRefresh: () => Future.sync(refresh),
+        //새로고침시 초기화
+        child: PagedGridView<int, MyImage>(
+          pagingController: _pagingController,
+          builderDelegate: PagedChildBuilderDelegate<MyImage>(
+            itemBuilder: (context, item, index) => ImageItem(
+              myImage: item,
+            ),
+          ),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 4.0,
+            mainAxisSpacing: 4.0,
+          ),
+        ));
   }
 
   @override

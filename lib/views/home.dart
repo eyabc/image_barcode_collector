@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_barcode_collector/components/progress_bar.dart';
 import '../components/grid_gallery.dart';
+import '../entities/my_images.dart';
+import '../storages/component_view_storage.dart';
+import '../storages/image_storage.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -18,4 +21,14 @@ class Home extends StatelessWidget {
           child: ProgressBar(),
         ));
   }
+}
+
+class HomeRefresher {
+
+  static refresh() async {
+    imageStorage.sortImagesByCreatedTime();
+    await MyImages.loadAssetCount();
+    ComponentViewStorage.setShowProgressBar(true);
+  }
+
 }
