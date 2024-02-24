@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
@@ -6,6 +7,9 @@ import 'package:image_barcode_collector/storages/image_storage.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import 'my_image.dart';
+
+PhotoManagerPlugin plugin = PhotoManagerPlugin();
+BarcodeScanner barcodeScanner = BarcodeScanner();
 
 class MyImages {
   final Set<MyImage> _set = {};
@@ -88,13 +92,24 @@ class MyImages {
     return await Future.wait(fileTask);
   }
 
-  static final barcodeScanner = BarcodeScanner();
 
   Future<MyImages> filterBarcodeImages() async {
-    List<File?> files = await getFiles();
     List<Future<List<Barcode>>> task = [];
-    for (File? file in files) {
-      task.add(barcodeScanner.processImage(InputImage.fromFile(file!)));
+    for (MyImage myImage in _set) {
+      String? path;
+      try {
+        path = await plugin.getFullFile(
+            myImage.getId(),
+            isOrigin: false
+        ).timeout(const Duration(seconds: 1));
+      } on TimeoutException {
+        continue;
+      }
+
+      if (path != null) {
+        var inputImage = InputImage.fromFilePath(path);
+        task.add(BarcodeScanner().processImage(inputImage));
+      }
     }
 
     var list = (await Future.wait(task));
