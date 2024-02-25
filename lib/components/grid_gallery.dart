@@ -136,7 +136,7 @@ class _GridGallery extends State<GridGallery> {
     elbumImages = ImagesFromAlbum();
     BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(0);
     scannedImageCache = await scannedImageStorage.getImages();
-    // await appendFirstFromAlbum();
+    await _load();
   }
 
   @override

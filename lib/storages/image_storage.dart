@@ -24,7 +24,7 @@ class _ImageStorageFactory {
 
   Future<MyImages> addImages(MyImages myImages) async {
     MyImages value = await getImages();
-    var diff = value.diff(myImages);
+    var diff = myImages.diff(value);
     value.addMyImages(myImages);
     final prefs = await SharedPreferences.getInstance();
     prefs.setStringList(_KEY, value.toStringList());
