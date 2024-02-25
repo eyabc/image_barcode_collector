@@ -146,6 +146,7 @@ class _GridGallery extends State<GridGallery> {
         onRefresh: () => Future.sync(refresh),
         //새로고침시 초기화
         child: PagedGridView<int, MyImage>(
+          showNewPageProgressIndicatorAsGridChild: false,
           pagingController: _pagingController,
           builderDelegate: PagedChildBuilderDelegate<MyImage>(
             itemBuilder: (context, item, index) => ImageItem(

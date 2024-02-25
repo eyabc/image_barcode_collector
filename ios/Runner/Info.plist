@@ -51,5 +51,8 @@
   <key>NSCameraUsageDescription</key>
   <string>카메라 접근권한이 필요합니다. 카메라로 촬영된 사진에서 바코드가 포함된 이미지를 검색합니다. 앱에서 사용자 데이터의 수집은 없습니다. </string>
 
+  <key>GADApplicationIdentifier</key>
+  <string>ca-app-pub-1302807400867776~4933292080</string>
+
 </dict>
 </plist>
