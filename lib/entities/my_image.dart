@@ -1,6 +1,9 @@
+
+import 'dart:core';
+
 import 'package:photo_manager/src/types/entity.dart';
 
-class MyImage {
+class MyImage<Comparator>  {
 
   final AssetEntity _assetEntity;
   late String _id;

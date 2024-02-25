@@ -44,11 +44,6 @@ class _ImageStorageFactory {
     return myImages.length();
   }
 
-  Future<void> sortImagesByCreatedTime() async {
-    MyImages myImages = await getImages();
-    await setImages(myImages.sortByCreatedTime());
-  }
-
 }
 
 /**

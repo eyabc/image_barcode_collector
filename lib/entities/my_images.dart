@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:image_barcode_collector/entities/pageable.dart';
@@ -10,7 +11,8 @@ PhotoManagerPlugin plugin = PhotoManagerPlugin();
 BarcodeScanner barcodeScanner = BarcodeScanner();
 
 class MyImages {
-  final Set<MyImage> _images = {};
+  /// MyImages 를 생성일을 기준으로 정렬한 새로운 MyImages를 반환합니다.
+  final Set<MyImage> _images = SplayTreeSet((b, a) => a.getCreateDateSecond() - b.getCreateDateSecond());
 
   static const Duration timeoutDuration = Duration(seconds: 1);
 
@@ -19,13 +21,13 @@ class MyImages {
 
   /// MyImage 목록에서 MyImages 인스턴스를 생성합니다.
   static MyImages fromList(List<MyImage> images) {
-    var result = empty()..addAll(images);
-    return result;
+    return empty().addSet(images.toSet());
   }
 
   /// MyImage 집합에서 MyImages 인스턴스를 생성합니다.
   static MyImages fromSet(Set<MyImage> images) {
-    var result = empty()..addAll(images.toList());
+    var result = empty();
+    result._images.addAll(images);
     return result;
   }
 
@@ -56,7 +58,11 @@ class MyImages {
   List<MyImage> getList() => List.unmodifiable(_images);
 
   /// 주어진 MyImage 목록을 현재 MyImages에 추가합니다.
-  void addAll(List<MyImage> images) => _images.addAll(images);
+  MyImages addSet(Set<MyImage> images) {
+    var result = fromSet(_images);
+    result._images.addAll(images);
+    return result;
+  }
 
   /// 현재 MyImages와 다른 MyImages 간의 차집합을 반환합니다.
   MyImages diff(MyImages otherImages) => MyImages.fromSet(otherImages._images.difference(_images));
@@ -82,12 +88,6 @@ class MyImages {
       return empty();
     }
     return fromList(_images.toList().sublist(pageable.offset(), pageable.nextOffset()));
-  }
-
-  /// MyImages를 생성일을 기준으로 정렬한 새로운 MyImages를 반환합니다.
-  MyImages sortByCreatedTime() {
-    var sortedImages = _images.toList()..sort((b, a) => a.getCreateDateSecond() - b.getCreateDateSecond());
-    return MyImages.fromList(sortedImages);
   }
 
   // 여기 아래에서 부터는 분리가능성이 큰 메서드들

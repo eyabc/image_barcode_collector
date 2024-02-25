@@ -37,7 +37,7 @@ const int loadSizeOfElbum = 9;
 // 앨범에서 가져온 바코드 이미지수가 최소 3개가 되어야 렌더링 된다. 그 이하면 더 불러온다
 const int minSizeOfRendering = 3;
 
-class ImagesFromElbum {
+class ImagesFromAlbum {
   final Pageable _pageable = Pageable(size: loadSizeOfElbum, page: 0);
   bool scannedImageLoaded = false;
 
@@ -68,7 +68,7 @@ class ImagesFromElbum {
 class _GridGallery extends State<GridGallery> {
   final PagingController<int, MyImage> _pagingController = PagingController(firstPageKey: 0);
   late ImagesFromStorage storageImages = ImagesFromStorage();
-  late ImagesFromElbum elbumImages = ImagesFromElbum();
+  late ImagesFromAlbum elbumImages = ImagesFromAlbum();
   static MyImages scannedImageCache = MyImages.empty();
 
   _GridGallery();
@@ -94,42 +94,49 @@ class _GridGallery extends State<GridGallery> {
      */
     MyImages imagesFromStorage = await storageImages.load();
     if (imagesFromStorage.length() == loadSizeOfStorage) {
-      _pagingController.appendPage(
-          imagesFromStorage.getList(), storageImages._pageable.page);
+      append(imagesFromStorage, storageImages._pageable);
       return;
     }
 
     if (0 < imagesFromStorage.length() &&
         imagesFromStorage.length() < loadSizeOfStorage) {
-      _pagingController.appendPage(
-          imagesFromStorage.getList(), storageImages._pageable.page);
+      append(imagesFromStorage, storageImages._pageable);
     }
 
-    MyImages myImagesFromElbum = await elbumImages.load(scannedImageCache);
-    while (myImagesFromElbum.length() < minSizeOfRendering &&
+    MyImages myImagesFromAlbum = await elbumImages.load(scannedImageCache);
+    while (myImagesFromAlbum.length() < minSizeOfRendering &&
         elbumImages._pageable.offset() <= (ImageLoader.getAssetCount() - elbumImages._pageable.size)) {
-      myImagesFromElbum.addMyImages(await elbumImages.load(scannedImageCache));
-      BlocProvider.of<ImageCubit>(context)
-          .setTotalLoadingCount(elbumImages._pageable.offset());
+      myImagesFromAlbum.addMyImages(await elbumImages.load(scannedImageCache));
+      BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(elbumImages._pageable.offset());
     }
 
-    if (myImagesFromElbum.length() == 0) {
-      _pagingController.appendLastPage(myImagesFromElbum.getList());
+    if (myImagesFromAlbum.length() == 0) {
+      _pagingController.appendLastPage(myImagesFromAlbum.getList());
       BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(ImageLoader.getAssetCount());
       return;
     }
 
-    _pagingController.appendPage(
-        myImagesFromElbum.getList(), elbumImages._pageable.page);
+    append(myImagesFromAlbum, elbumImages._pageable);
+  }
+
+  append(MyImages newImages, Pageable pageable) {
+    final previousItems = _pagingController.value.itemList ?? [];
+    final itemList = newImages.addSet(previousItems.toSet());
+    _pagingController.value = PagingState<int, MyImage> (
+      itemList: itemList.getList(),
+      error: null,
+      nextPageKey: pageable.page,
+    );
+
   }
 
   void refresh() async {
     await HomeRefresher.refresh();
     storageImages = ImagesFromStorage();
-    elbumImages = ImagesFromElbum();
+    elbumImages = ImagesFromAlbum();
     BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(0);
     scannedImageCache = await scannedImageStorage.getImages();
-    _pagingController.refresh();
+    // await appendFirstFromAlbum();
   }
 
   @override
