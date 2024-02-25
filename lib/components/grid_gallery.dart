@@ -4,6 +4,7 @@ import 'package:image_barcode_collector/entities/my_image.dart';
 import 'package:image_barcode_collector/entities/my_images.dart';
 import 'package:image_barcode_collector/entities/pageable.dart';
 import 'package:image_barcode_collector/storages/image_storage.dart';
+import 'package:image_barcode_collector/utils/image_loader.dart';
 import 'package:image_barcode_collector/views/home.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -40,7 +41,7 @@ class ImagesFromElbum {
   bool scannedImageLoaded = false;
 
   Future<MyImages> load(MyImages scannedImageCache) async {
-    var loadedImages = await MyImages.empty().loadAssetListByPageable(_pageable);
+    var loadedImages = await ImageLoader.loadAssetListByPageable(_pageable);
 
     if (scannedImageCache.isEmpty() && !scannedImageLoaded) {
       // 일급함수가 아님
@@ -105,7 +106,7 @@ class _GridGallery extends State<GridGallery> {
 
     MyImages myImagesFromElbum = await elbumImages.load(scannedImageCache);
     while (myImagesFromElbum.length() < minSizeOfRendering &&
-        elbumImages._pageable.offset() <= (MyImages.getAssetCount() - elbumImages._pageable.size)) {
+        elbumImages._pageable.offset() <= (ImageLoader.getAssetCount() - elbumImages._pageable.size)) {
       myImagesFromElbum.addMyImages(await elbumImages.load(scannedImageCache));
       BlocProvider.of<ImageCubit>(context)
           .setTotalLoadingCount(elbumImages._pageable.offset());
@@ -113,7 +114,7 @@ class _GridGallery extends State<GridGallery> {
 
     if (myImagesFromElbum.length() == 0) {
       _pagingController.appendLastPage(myImagesFromElbum.getList());
-      BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(MyImages.getAssetCount());
+      BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(ImageLoader.getAssetCount());
       return;
     }
 

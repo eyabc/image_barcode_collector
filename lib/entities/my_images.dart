@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:image_barcode_collector/entities/pageable.dart';
-import 'package:image_barcode_collector/storages/image_storage.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import 'my_image.dart';
@@ -14,7 +13,6 @@ BarcodeScanner barcodeScanner = BarcodeScanner();
 
 class MyImages {
   final Set<MyImage> _images = {};
-  static int _assetCount = -1;
 
   static const Duration timeoutDuration = Duration(seconds: 1);
 
@@ -80,42 +78,12 @@ class MyImages {
   }
 
   // 여기 아래에서 부터는 분리가능성이 큰 메서드들
-
-  static Future<List<AssetPathEntity>> _getAlbumList() async =>
-      await PhotoManager.getAssetPathList(type: RequestType.image);
-
-  static Future<void> loadAssetCount() async {
-    final albums = await _getAlbumList();
-    _assetCount = await (albums[0]).assetCountAsync;
-  }
-
-  static int getAssetCount() => _assetCount;
-
-  /**
-   * 앨범에서 pageable 로 AssetEntity 들을 가져온다.
-   * todo - 앨범은 쉽게 교체할 수 있도록 Elbum 다형성 처리한다.
-   */
-  Future<MyImages> loadAssetListByPageable(Pageable pageable) async {
-    final albums = await _getAlbumList();
-    if (albums.isEmpty) {
-      return empty();
-    }
-
-    var assetList = await albums[0].getAssetListPaged(page: pageable.page, size: pageable.size);
-    return fromAssetEntityList(assetList);
-  }
-
   /**
    * assetList 들이 이미 스토리지에 저장되었는지 확인하고 스토리지에 저장되지 않는 것만 가져온다.
    * 내 이미지에서 targetImages 를 차집합 한다.
    *
    */
   MyImages filterNotIn(MyImages targetImages) => MyImages.fromSet(_images.difference(targetImages._images));
-
-  Future<List<File?>> getFiles() async {
-    var fileTasks = _images.map((image) => image.getAssetEntity().file).toList();
-    return await Future.wait(fileTasks);
-  }
 
   Future<MyImages> filterBarcodeImages() async {
     var tasks = _images.map((myImage) async {
@@ -136,12 +104,6 @@ class MyImages {
 
     var list = await Future.wait(tasks);
     return MyImages.fromSet(list.where((image) => image != null).cast<MyImage>().toSet());
-  }
-
-  Future<MyImages> loadBarcodeImages(Pageable pageable) async {
-    return (await loadAssetListByPageable(pageable))
-        .filterNotIn(await imageStorage.getImages())
-        .filterBarcodeImages();
   }
 
   // 일급함수로 만들어볼것
