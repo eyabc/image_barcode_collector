@@ -82,7 +82,7 @@ class _GridGallery extends State<GridGallery> {
   // 과거 이미지 로드기능 추가
   // 신규 이미지 로드기능 보완
   Future<void> _load() async {
-    if (!ImageLoader.isLoaded()) {
+    if (await PhotoManager.requestPermissionExtend() == PermissionState.authorized && !ImageLoader.isLoaded()) {
       await ImageLoader.loadAssetCount();
     }
 
