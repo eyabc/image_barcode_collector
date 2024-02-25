@@ -30,23 +30,29 @@ class ImageView extends StatelessWidget {
     return FutureBuilder<File?>(
         future: myImage?.getAssetEntity()?.file,
         builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done || !snapshot.hasData) {
+          if (snapshot.connectionState != ConnectionState.done ||
+              !snapshot.hasData) {
             return const Center();
           }
 
           return Scaffold(
-            appBar: AppBar(
-              flexibleSpace: AdWidget(
-                ad: banner,
-              ),
-            ),
-            body: Stack(
-              fit: StackFit.expand,
-              children: <Widget>[
-                Image.file(snapshot.data as File),
-              ],
-            ),
-          );
+              appBar: AppBar(),
+              body: SafeArea(
+                  child: Column(children: [
+                Expanded(
+                    child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    Image.file(snapshot.data as File),
+                  ],
+                )),
+                SizedBox(
+                    width: banner.size.width.toDouble(),
+                    height: banner.size.height.toDouble(),
+                    child: AdWidget(
+                      ad: banner,
+                    ))
+              ])));
         });
   }
 }
