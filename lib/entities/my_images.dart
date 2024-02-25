@@ -8,71 +8,101 @@ import 'package:photo_manager/photo_manager.dart';
 
 import 'my_image.dart';
 
+
 PhotoManagerPlugin plugin = PhotoManagerPlugin();
 BarcodeScanner barcodeScanner = BarcodeScanner();
 
 class MyImages {
-  final Set<MyImage> _set = {};
+  final Set<MyImage> _images = {};
   static int _assetCount = -1;
 
-  static MyImages ofEmpty() {
-    return MyImages();
-  }
+  static const Duration timeoutDuration = Duration(seconds: 1);
 
-  static MyImages ofMyImages(List<MyImage> myImages) {
-    var result = ofEmpty();
-    result._set.addAll(myImages);
+  static MyImages empty() => MyImages();
+
+  static MyImages fromList(List<MyImage> images) {
+    var result = empty()..addAll(images);
     return result;
   }
 
-  static MyImages ofMyImagesSet(Set<MyImage> myImages) {
-    var result = ofEmpty();
-    result._set.addAll(myImages);
+  static MyImages fromSet(Set<MyImage> images) {
+    var result = empty()..addAll(images.toList());
     return result;
   }
 
-  static MyImages ofAssetEntityList(List<AssetEntity> assetEntities) {
-    MyImages result = MyImages();
+  static MyImages fromAssetEntityList(List<AssetEntity> assetEntities) {
+    MyImages result = empty();
     for (var o in assetEntities) {
       result.add(MyImage.ofAssetEntity(o));
     }
     return result;
   }
 
-  static of(List<String> stringList) async {
-    var result = ofEmpty();
-    for (String id in stringList) {
-      await MyImage.of(id).then((res) =>
-          result._set.add(res)
-      );
+  static Future<MyImages> fromIds(List<String> ids) async {
+    var result = empty();
+    for (String id in ids) {
+      try {
+        var image = await MyImage.fromId(id);
+        result.add(image);
+      } catch (e) {
+        print('Error loading image with id: $id - $e');
+      }
     }
     return result;
   }
 
-  List<MyImage> getList() {
-    return List.unmodifiable(_set);
+  List<MyImage> getList() => List.unmodifiable(_images);
+
+  void addAll(List<MyImage> images) => _images.addAll(images);
+
+  MyImages diff(MyImages otherImages) => MyImages.fromSet(otherImages._images.difference(_images));
+
+  void add(MyImage image) => _images.add(image);
+
+  int length() => _images.length;
+
+  bool isEmpty() => _images.isEmpty;
+
+  MyImage getIndex(int index) => _images.elementAt(index);
+
+  List<String> toStringList() => _images.map((image) => image.getId()).toList();
+
+  MyImages sublist(Pageable pageable) {
+    if (_images.length <= pageable.nextOffset()) {
+      return empty();
+    }
+    return fromList(_images.toList().sublist(pageable.offset(), pageable.nextOffset()));
   }
+
+  MyImages sortByCreatedTime() {
+    var sortedImages = _images.toList()..sort((a, b) => a.getCreateDateSecond() - b.getCreateDateSecond());
+    return MyImages.fromList(sortedImages);
+  }
+
+  // 여기 아래에서 부터는 분리가능성이 큰 메서드들
+
+  static Future<List<AssetPathEntity>> _getAlbumList() async =>
+      await PhotoManager.getAssetPathList(type: RequestType.image);
 
   static Future<void> loadAssetCount() async {
-    final assets = await _getElbumList();
-    _assetCount = await (await assets[0] as AssetPathEntity).assetCountAsync;
+    final albums = await _getAlbumList();
+    _assetCount = await (albums[0]).assetCountAsync;
   }
 
-  static int getAssetCount() {
-    return _assetCount;
-  }
+  static int getAssetCount() => _assetCount;
 
   /**
    * 앨범에서 pageable 로 AssetEntity 들을 가져온다.
    * todo - 앨범은 쉽게 교체할 수 있도록 Elbum 다형성 처리한다.
    */
   Future<MyImages> loadAssetListByPageable(Pageable pageable) async {
-    final assets = await _getElbumList();
-    if (assets.isEmpty) {
-      return MyImages.ofEmpty();
+    final albums = await _getAlbumList();
+    if (albums.isEmpty) {
+      return empty();
     }
 
-    return MyImages.ofAssetEntityList(await assets[0].getAssetListPaged(page: pageable.page, size: pageable.size));
+    var assetList = await albums[0].getAssetListPaged(page: pageable.page, size: pageable.size);
+    return fromAssetEntityList(assetList);
   }
 
   /**
@@ -80,47 +110,32 @@ class MyImages {
    * 내 이미지에서 targetImages 를 차집합 한다.
    *
    */
-  MyImages filterNotIn(MyImages targetImages) {
-    return MyImages.ofMyImagesSet(_set.difference(targetImages._set));
-  }
+  MyImages filterNotIn(MyImages targetImages) => MyImages.fromSet(_images.difference(targetImages._images));
 
   Future<List<File?>> getFiles() async {
-    List<Future<File?>> fileTask = [];
-    for (MyImage image in _set) {
-      fileTask.add(image.getAssetEntity().file);
-    }
-    return await Future.wait(fileTask);
+    var fileTasks = _images.map((image) => image.getAssetEntity().file).toList();
+    return await Future.wait(fileTasks);
   }
 
-
   Future<MyImages> filterBarcodeImages() async {
-    List<Future<List<Barcode>>> task = [];
-    for (MyImage myImage in _set) {
-      String? path;
+    var tasks = _images.map((myImage) async {
       try {
-        path = await plugin.getFullFile(
-            myImage.getId(),
-            isOrigin: false
-        ).timeout(const Duration(seconds: 1));
+        var path = await plugin.getFullFile(myImage.getId(), isOrigin: false).timeout(timeoutDuration);
+        if (path != null) {
+          var inputImage = InputImage.fromFilePath(path);
+          var barcodes = await BarcodeScanner().processImage(inputImage);
+          if (barcodes.isNotEmpty) {
+            return myImage;
+          }
+        }
       } on TimeoutException {
-        continue;
+        print('Error processing barcode for image with id: ${myImage.getId()}');
       }
+      return null;
+    });
 
-      if (path != null) {
-        var inputImage = InputImage.fromFilePath(path);
-        task.add(BarcodeScanner().processImage(inputImage));
-      }
-    }
-
-    var list = (await Future.wait(task));
-    MyImages result = ofEmpty();
-    for (int i = 0; i < list.length; i++) {
-      if (list[i].isNotEmpty) {
-        result._set.add(_set.elementAt(i));
-      }
-    }
-
-    return result;
+    var list = await Future.wait(tasks);
+    return MyImages.fromSet(list.where((image) => image != null).cast<MyImage>().toSet());
   }
 
   Future<MyImages> loadBarcodeImages(Pageable pageable) async {
@@ -129,58 +144,7 @@ class MyImages {
         .filterBarcodeImages();
   }
 
-  static Future<List<AssetPathEntity>> _getElbumList() async => await PhotoManager.getAssetPathList(type: RequestType.image);
-
-  void addAllMyImages(List<MyImage> result) {
-    _set.addAll(result);
-  }
-
-  MyImages diffMyImages(MyImages myImages) {
-    return ofMyImagesSet(myImages._set.difference(_set));
-  }
-
   // 일급함수로 만들어볼것
-  addMyImages(MyImages myImages) {
-    _set.addAll(myImages._set);
-  }
-
-  length() {
-    return _set.length;
-  }
-
-  isEmpty() {
-    return _set.isEmpty;
-  }
-
-  getIndex(int index) {
-    return _set.elementAt(index);
-  }
-
-  List<String> toStringList() {
-    List<String> result = [];
-    for (MyImage myImage in _set) {
-      result.add(myImage.getId());
-    }
-    return result;
-  }
-
-  MyImages sublist(Pageable pageable) {
-    if (_set.length <= pageable.nextOffset()) {
-      return ofEmpty();
-    }
-
-    return ofMyImages(_set.toList().sublist(pageable.offset(), pageable.nextOffset()));
-  }
-
-  // immutable
-  MyImages sortByCreatedTime() {
-    List<MyImage> result = _set.toList();
-    result.sort((a, b) => a.getCreateDateSecond() - b.getCreateDateSecond());
-    return MyImages.ofMyImages(result);
-  }
-
-  void add(MyImage myImage) {
-    _set.add(myImage);
-  }
+  addMyImages(MyImages myImages) => _images.addAll(myImages._images);
 
 }

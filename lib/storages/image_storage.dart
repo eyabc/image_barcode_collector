@@ -15,7 +15,7 @@ class _ImageStorageFactory {
 
   Future<MyImages> getImages() async {
     final prefs = await SharedPreferences.getInstance();
-    return await MyImages.of(prefs.getStringList(_KEY) ?? []);
+    return await MyImages.fromIds(prefs.getStringList(_KEY) ?? []);
   }
 
   Future<MyImages> getImagesByPage(Pageable pageable) async {
@@ -24,7 +24,7 @@ class _ImageStorageFactory {
 
   Future<MyImages> addImages(MyImages myImages) async {
     MyImages value = await getImages();
-    var diff = value.diffMyImages(myImages);
+    var diff = value.diff(myImages);
     value.addMyImages(myImages);
     final prefs = await SharedPreferences.getInstance();
     prefs.setStringList(_KEY, value.toStringList());

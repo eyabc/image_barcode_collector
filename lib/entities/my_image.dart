@@ -25,7 +25,7 @@ class MyImage {
     return _createDateSecond;
   }
 
-  static of(String id) async {
+  static fromId(String id) async {
     AssetEntity assetEntity = await AssetEntity.fromId(id) ?? AssetEntity(id: id, typeInt: 0, width: 100, height: 100);
     var myImage = MyImage(assetEntity);
     return myImage;

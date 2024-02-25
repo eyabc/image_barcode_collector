@@ -40,7 +40,7 @@ class ImagesFromElbum {
   bool scannedImageLoaded = false;
 
   Future<MyImages> load(MyImages scannedImageCache) async {
-    var loadedImages = await MyImages.ofEmpty().loadAssetListByPageable(_pageable);
+    var loadedImages = await MyImages.empty().loadAssetListByPageable(_pageable);
 
     if (scannedImageCache.isEmpty() && !scannedImageLoaded) {
       // 일급함수가 아님
@@ -58,7 +58,7 @@ class ImagesFromElbum {
       return await imageStorage.addImages(result);
     }
 
-    return MyImages.ofEmpty();
+    return MyImages.empty();
   }
 }
 
@@ -67,7 +67,7 @@ class _GridGallery extends State<GridGallery> {
   final PagingController<int, MyImage> _pagingController = PagingController(firstPageKey: 0);
   late ImagesFromStorage storageImages = ImagesFromStorage();
   late ImagesFromElbum elbumImages = ImagesFromElbum();
-  static MyImages scannedImageCache = MyImages.ofEmpty();
+  static MyImages scannedImageCache = MyImages.empty();
 
   _GridGallery();
 
