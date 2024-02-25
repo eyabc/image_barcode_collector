@@ -11,6 +11,7 @@ import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import '../states/image_state.dart';
+import '../storages/component_view_storage.dart';
 import 'image_item.dart';
 
 class GridGallery extends StatefulWidget {
@@ -135,7 +136,7 @@ class _GridGallery extends State<GridGallery> {
   }
 
   void refresh() async {
-    await HomeRefresher.refresh();
+    await ComponentViewStorage.setShowProgressBar(true);
     storageImages = ImagesFromStorage();
     elbumImages = ImagesFromAlbum();
     BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(0);
