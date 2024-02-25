@@ -111,7 +111,7 @@ class _GridGallery extends State<GridGallery> {
     }
 
     if (myImagesFromAlbum.length() == 0) {
-      _pagingController.appendLastPage(myImagesFromAlbum.getList());
+      append(myImagesFromAlbum, null);
       BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(ImageLoader.getAssetCount());
       return;
     }
@@ -119,13 +119,13 @@ class _GridGallery extends State<GridGallery> {
     append(myImagesFromAlbum, elbumImages._pageable);
   }
 
-  append(MyImages newImages, Pageable pageable) {
+  append(MyImages newImages, Pageable? pageable) {
     final previousItems = _pagingController.value.itemList ?? [];
     final itemList = newImages.addSet(previousItems.toSet());
     _pagingController.value = PagingState<int, MyImage> (
       itemList: itemList.getList(),
       error: null,
-      nextPageKey: pageable.page,
+      nextPageKey: pageable?.page,
     );
 
   }
