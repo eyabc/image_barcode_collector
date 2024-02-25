@@ -26,7 +26,6 @@ class Home extends StatelessWidget {
 class HomeRefresher {
 
   static refresh() async {
-    await ImageLoader.loadAssetCount();
     ComponentViewStorage.setShowProgressBar(true);
   }
 

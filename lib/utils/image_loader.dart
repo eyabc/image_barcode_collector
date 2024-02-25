@@ -9,6 +9,8 @@ import '../entities/pageable.dart';
 class ImageLoader {
   static int _assetCount = -1;
 
+  static bool isLoaded() =>  _assetCount != -1;
+
   /// 앨범 목록을 가져옵니다.
   static Future<List<AssetPathEntity>> getAlbumList() async =>
       await PhotoManager.getAssetPathList(type: RequestType.image);

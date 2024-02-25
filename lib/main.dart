@@ -20,7 +20,6 @@ Future<void> main() async {
   // 앱의 endpoint, 변수 초기화
   WidgetsFlutterBinding.ensureInitialized();
   MobileAds.instance.initialize();
-
   await HomeRefresher.refresh();
 
   runApp(const App());
