@@ -85,27 +85,6 @@ class MyImages {
    */
   MyImages filterNotIn(MyImages targetImages) => MyImages.fromSet(_images.difference(targetImages._images));
 
-  Future<MyImages> filterBarcodeImages() async {
-    var tasks = _images.map((myImage) async {
-      try {
-        var path = await plugin.getFullFile(myImage.getId(), isOrigin: false).timeout(timeoutDuration);
-        if (path != null) {
-          var inputImage = InputImage.fromFilePath(path);
-          var barcodes = await BarcodeScanner().processImage(inputImage);
-          if (barcodes.isNotEmpty) {
-            return myImage;
-          }
-        }
-      } on TimeoutException {
-        print('Error processing barcode for image with id: ${myImage.getId()}');
-      }
-      return null;
-    });
-
-    var list = await Future.wait(tasks);
-    return MyImages.fromSet(list.where((image) => image != null).cast<MyImage>().toSet());
-  }
-
   // 일급함수로 만들어볼것
   addMyImages(MyImages myImages) => _images.addAll(myImages._images);
 

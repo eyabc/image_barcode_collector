@@ -4,6 +4,7 @@ import 'package:image_barcode_collector/entities/my_image.dart';
 import 'package:image_barcode_collector/entities/my_images.dart';
 import 'package:image_barcode_collector/entities/pageable.dart';
 import 'package:image_barcode_collector/storages/image_storage.dart';
+import 'package:image_barcode_collector/utils/barcode_processor.dart';
 import 'package:image_barcode_collector/utils/image_loader.dart';
 import 'package:image_barcode_collector/views/home.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
@@ -50,7 +51,7 @@ class ImagesFromElbum {
     }
 
     MyImages notScannedImages = loadedImages.filterNotIn(scannedImageCache);
-    MyImages result = await notScannedImages.filterBarcodeImages();
+    MyImages result = await BarcodeProcessor.filterBarcodeImages(notScannedImages);
 
     scannedImageStorage.addImages(loadedImages);
     _pageable.increasePage();
