@@ -36,7 +36,7 @@ class ImageView extends StatelessWidget {
 
           return Scaffold(
             appBar: AppBar(
-              leading: AdWidget(
+              flexibleSpace: AdWidget(
                 ad: banner,
               ),
             ),

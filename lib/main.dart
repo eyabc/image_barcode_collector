@@ -7,14 +7,13 @@ import 'app.dart';
 
 const Map<String, String> UNIT_ID = kReleaseMode
     ? {
-  'ios': '[YOUR iOS AD UNIT ID]',
-  'android': '[YOUR ANDROID AD UNIT ID]',
+  'ios': 'ca-app-pub-1302807400867776/3579352973',
+  'android': 'ca-app-pub-1302807400867776/7575767293',
 }
 : {
-  'ios': 'ca-app-pub-1302807400867776~4933292080',
-  'android': 'ca-app-pub-1302807400867776~3496921486',
+  'ios': 'ca-app-pub-3940256099942544/2934735716',
+  'android': 'ca-app-pub-3940256099942544/2934735716',
 };
-
 
 Future<void> main() async {
 
