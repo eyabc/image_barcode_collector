@@ -86,7 +86,7 @@ class MyImages {
 
   /// MyImages를 생성일을 기준으로 정렬한 새로운 MyImages를 반환합니다.
   MyImages sortByCreatedTime() {
-    var sortedImages = _images.toList()..sort((a, b) => a.getCreateDateSecond() - b.getCreateDateSecond());
+    var sortedImages = _images.toList()..sort((b, a) => a.getCreateDateSecond() - b.getCreateDateSecond());
     return MyImages.fromList(sortedImages);
   }
 

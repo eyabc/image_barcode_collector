@@ -46,8 +46,7 @@ class _ImageStorageFactory {
 
   Future<void> sortImagesByCreatedTime() async {
     MyImages myImages = await getImages();
-    myImages.sortByCreatedTime();
-    setImages(myImages);
+    await setImages(myImages.sortByCreatedTime());
   }
 
 }
@@ -55,6 +54,7 @@ class _ImageStorageFactory {
 /**
  * 키가 커지면 샤딩해서 가져오기로 변경
  * 저장된 이미지 키의 Set<String>
+ * 특별한 기능이 추가되어야 하면 컴포지션으로 변경하기
  */
 
 final imageStorage = _ImageStorageFactory.of("image");
