@@ -136,10 +136,10 @@ class _GridGallery extends State<GridGallery> {
   }
 
   void refresh() async {
+    BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(0);
     await ComponentViewStorage.setShowProgressBar(true);
     storageImages = ImagesFromStorage();
     elbumImages = ImagesFromAlbum();
-    BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(0);
     scannedImageCache = await scannedImageStorage.getImages();
     await _load();
   }

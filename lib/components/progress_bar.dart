@@ -14,7 +14,7 @@ class ProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List?>(
-        future: Future.wait([ComponentViewStorage.isShowProgressBar()]),
+        future: Future.wait([]),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
             return snapshot.data?[0] ?? false ? BlocConsumer<ImageCubit, ImageState>(

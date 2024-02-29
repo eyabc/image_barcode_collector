@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:image_barcode_collector/views/home.dart';
 
 import 'app.dart';
 
@@ -20,8 +19,6 @@ Future<void> main() async {
   // 앱의 endpoint, 변수 초기화
   WidgetsFlutterBinding.ensureInitialized();
   MobileAds.instance.initialize();
-  await HomeRefresher.refresh();
-
   runApp(const App());
 }
 
