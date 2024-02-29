@@ -16,9 +16,10 @@ class ImageLoader {
       await PhotoManager.getAssetPathList(type: RequestType.image);
 
   /// 앨범의 자산 수를 로드합니다.
-  static Future<void> loadAssetCount() async {
+  static Future<int> loadAssetCount() async {
     final albums = await getAlbumList();
     _assetCount = await albums[0].assetCountAsync;
+    return _assetCount;
   }
 
   /**
@@ -42,5 +43,7 @@ class ImageLoader {
   }
 
   /// 앨범의 자산 수를 반환합니다.
-  static getAssetCount() => _assetCount;
+  static getAssetCount() {
+    return _assetCount;
+  }
 }

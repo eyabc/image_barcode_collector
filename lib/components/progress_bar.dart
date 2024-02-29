@@ -13,22 +13,22 @@ class ProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List?>(
-        future: Future.wait([]),
+    return FutureBuilder<int>(
+        future: ImageLoader.loadAssetCount(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
-            return snapshot.data?[0] ?? false ? BlocConsumer<ImageCubit, ImageState>(
-                listener: (context, state) {},
-                builder: (context, state) {
-                  return LinearPercentIndicator(
-                      lineHeight: 20.0,
-                      percent: state.imageCount / ImageLoader.getAssetCount(),
-                      center: Text("${state.imageCount} / ${ImageLoader.getAssetCount()}"),
-                      barRadius: const Radius.circular(5),
-                      progressColor: Colors.amberAccent);
-                }) : const Text("최근 이미지 스캔 완료");
+          if (!snapshot.hasData) {
+            return const Text("");
           }
-          return  const Text("");
+
+          return BlocConsumer<ImageCubit, ImageState>(
+              listener: (context, state) {},
+              builder: (context, state) {
+                return LinearPercentIndicator(
+                    lineHeight: 20.0,
+                    percent: state.imageCount / (snapshot.data as int),
+                    barRadius: const Radius.circular(5),
+                    progressColor: Colors.amberAccent);
+              });
         }
     );
 
