@@ -14,10 +14,7 @@ class ImagesOfStorage {
 
   static Future<ImagesOfStorage> from() async {
     var instance = ImagesOfStorage();
-    instance._currentImages = await imageStorage.getImagesByPage(instance._pageable);
-    instance._pageable.increasePage();
     instance._count = await imageStorage.size();
-
     return instance;
   }
 

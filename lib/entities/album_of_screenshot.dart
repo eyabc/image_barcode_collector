@@ -2,11 +2,11 @@
 import 'package:image_barcode_collector/entities/album.dart';
 import 'package:photo_manager/photo_manager.dart';
 
-class AlbumOfScreenshot extends Album {
-  static PhotoManagerPlugin plugin = PhotoManagerPlugin();
+import '../utils/plugin.dart';
 
-  @override
-  Future<AssetPathEntity> get() async {
+class AlbumOfScreenshot {
+
+  static Future<Album> from() async {
     final List<PMDarwinAssetCollectionType> pathTypeList = [ PMDarwinAssetCollectionType.smartAlbum ]; // use your need type
     final List<PMDarwinAssetCollectionSubtype> pathSubTypeList = [ PMDarwinAssetCollectionSubtype.smartAlbumScreenshots ]; // use your need type
     final darwinPathFilterOption = PMDarwinPathFilter(
@@ -15,7 +15,7 @@ class AlbumOfScreenshot extends Album {
     );
 
     PMPathFilter pathFilter = PMPathFilter(darwin: darwinPathFilterOption);
-    var assetPathList = await plugin.getAssetPathList(
+    var assetPathList = await photoManagerPlugin.getAssetPathList(
       hasAll: true,
       onlyAll: false,
       type: RequestType.image,
@@ -23,8 +23,7 @@ class AlbumOfScreenshot extends Album {
       pathFilterOption: pathFilter,
     );
 
-    return assetPathList[1];
-
+    return Album.fromAssetPathEntity(assetPathList[1]);
   }
 
 }
