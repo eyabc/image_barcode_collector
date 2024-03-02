@@ -59,7 +59,7 @@ class ImagesFromAlbum {
 class _GridGallery extends State<GridGallery> {
   final PagingController<int, MyImage> _pagingController = PagingController(firstPageKey: 0);
   ImagesOfStorage imagesOfStorage = ImagesOfStorage();
-  late ImagesFromAlbum albumImages = ImagesFromAlbum();
+  ImagesFromAlbum albumImages = ImagesFromAlbum();
   static MyImages scannedImageCache = MyImages.empty();
 
   @override
@@ -71,6 +71,7 @@ class _GridGallery extends State<GridGallery> {
   loadStorageImages() async {
     if (!imagesOfStorage.isInitialized()) {
       imagesOfStorage = await ImagesOfStorage.from();
+      append(imagesOfStorage.getCurrentImages(), true);
     }
 
     /**
