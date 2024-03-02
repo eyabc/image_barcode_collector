@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:image_barcode_collector/components/ad_google_banner.dart';
 import 'package:image_barcode_collector/components/progress_bar.dart';
-import 'package:image_barcode_collector/utils/image_loader.dart';
 import 'package:photo_manager/photo_manager.dart';
 import '../components/grid_gallery.dart';
-import '../storages/component_view_storage.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -27,7 +26,7 @@ class Home extends StatelessWidget {
         var hasPermission = snapshot.data == PermissionState.authorized;
         return Scaffold(
             appBar: AppBar(
-              title: const Text('Barcodes From The Gallery'),
+              title: const AdGoogleBanner(),
               centerTitle: true,
               elevation: 0,
             ),
