@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_barcode_collector/entities/images_of_storage.dart';
 import 'package:image_barcode_collector/entities/my_image.dart';
 import 'package:image_barcode_collector/entities/my_images.dart';
 import 'package:image_barcode_collector/entities/pageable.dart';
@@ -21,17 +22,6 @@ class GridGallery extends StatefulWidget {
   State<GridGallery> createState() => _GridGallery();
 }
 
-const int loadSizeOfStorage = 12;
-
-class ImagesFromStorage {
-  final Pageable _pageable = Pageable(size: loadSizeOfStorage, page: 0);
-
-  Future<MyImages> load() async {
-    MyImages myImages = await imageStorage.getImagesByPage(_pageable);
-    _pageable.increasePage();
-    return myImages;
-  }
-}
 
 // 앨범에서 스캔할 파일 수
 const int loadSizeOfElbum = 9;
@@ -68,11 +58,9 @@ class ImagesFromAlbum {
 // todo background reload 와 foregrond 리로드는 storage 가 비었을때만 수행 refresh 는 없애기
 class _GridGallery extends State<GridGallery> {
   final PagingController<int, MyImage> _pagingController = PagingController(firstPageKey: 0);
-  late ImagesFromStorage storageImages = ImagesFromStorage();
-  late ImagesFromAlbum elbumImages = ImagesFromAlbum();
+  ImagesOfStorage imagesOfStorage = ImagesOfStorage();
+  late ImagesFromAlbum albumImages = ImagesFromAlbum();
   static MyImages scannedImageCache = MyImages.empty();
-
-  _GridGallery();
 
   @override
   void initState() {
@@ -80,11 +68,9 @@ class _GridGallery extends State<GridGallery> {
     super.initState();
   }
 
-  // 과거 이미지 로드기능 추가
-  // 신규 이미지 로드기능 보완
-  Future<void> _load() async {
-    if (!ImageLoader.isLoaded()) {
-      await ImageLoader.loadAssetCount();
+  loadStorageImages() async {
+    if (!imagesOfStorage.isInitialized()) {
+      imagesOfStorage = await ImagesOfStorage.from();
     }
 
     /**
@@ -92,40 +78,49 @@ class _GridGallery extends State<GridGallery> {
      * imagesFromStorage == loadSizeOfStorage -> 스토리지에서 더 불러온다.
      * 0 < imagesFromStorage 개수 < loadSizeOfStorage -> 마지막 페이지로 인식하고 앨범에서 로드하도록 한다.
      */
-    MyImages imagesFromStorage = await storageImages.load();
-    if (imagesFromStorage.length() == loadSizeOfStorage) {
-      append(imagesFromStorage, storageImages._pageable);
+    await imagesOfStorage.load();
+    if (imagesOfStorage.hasNext()) {
+      append(imagesOfStorage.getCurrentImages(), true);
       return;
     }
 
-    if (0 < imagesFromStorage.length() &&
-        imagesFromStorage.length() < loadSizeOfStorage) {
-      append(imagesFromStorage, storageImages._pageable);
+    if (imagesOfStorage.isLastPage()) {
+      append(imagesOfStorage.getCurrentImages(), true);
     }
 
-    MyImages myImagesFromAlbum = await elbumImages.load(scannedImageCache);
+  }
+
+  // 과거 이미지 로드기능 추가
+  // 신규 이미지 로드기능 보완
+  Future<void> _load() async {
+    await loadStorageImages();
+    if (imagesOfStorage.hasNext()) {
+      return;
+    }
+
+    MyImages myImagesFromAlbum = await albumImages.load(scannedImageCache);
     while (myImagesFromAlbum.length() < minSizeOfRendering &&
-        elbumImages._pageable.offset() <= (ImageLoader.getAssetCount() - elbumImages._pageable.size)) {
-      myImagesFromAlbum.addMyImages(await elbumImages.load(scannedImageCache));
-      BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(elbumImages._pageable.offset());
+        albumImages._pageable.offset() <= (ImageLoader.getAssetCount() - albumImages._pageable.size)) {
+      myImagesFromAlbum.addMyImages(await albumImages.load(scannedImageCache));
+      BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(albumImages._pageable.offset());
     }
 
     if (myImagesFromAlbum.length() == 0) {
-      append(myImagesFromAlbum, null);
+      append(myImagesFromAlbum, false);
       BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(ImageLoader.getAssetCount());
       return;
     }
 
-    append(myImagesFromAlbum, elbumImages._pageable);
+    append(myImagesFromAlbum, true);
   }
 
-  append(MyImages newImages, Pageable? pageable) {
+  append(MyImages newImages, bool hasNext) {
     final previousItems = _pagingController.value.itemList ?? [];
     final itemList = newImages.addSet(previousItems.toSet());
     _pagingController.value = PagingState<int, MyImage> (
       itemList: itemList.getList(),
       error: null,
-      nextPageKey: pageable?.page,
+      nextPageKey: hasNext ? 1 : null,
     );
 
   }
@@ -133,8 +128,8 @@ class _GridGallery extends State<GridGallery> {
   void refresh() async {
     BlocProvider.of<ImageCubit>(context).setTotalLoadingCount(0);
     await ComponentViewStorage.setShowProgressBar(true);
-    storageImages = ImagesFromStorage();
-    elbumImages = ImagesFromAlbum();
+    imagesOfStorage = await ImagesOfStorage.from();
+    albumImages = ImagesFromAlbum();
     scannedImageCache = await scannedImageStorage.getImages();
     await _load();
   }
