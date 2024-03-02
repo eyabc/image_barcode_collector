@@ -1,25 +1,30 @@
 import 'dart:io';
 import 'dart:async';
 
-import 'package:photo_manager/photo_manager.dart';
+import 'package:image_barcode_collector/components/error_dialog.dart';
+import 'package:image_barcode_collector/entities/album_of_screenshot.dart';
 
+import '../entities/album.dart';
 import '../entities/my_image.dart';
 import '../entities/my_images.dart';
 import '../entities/pageable.dart';
+
 class ImageLoader {
   static int _assetCount = -1;
+  static Album album = AlbumOfScreenshot();
 
   static bool isLoaded() =>  _assetCount != -1;
 
-  /// 앨범 목록을 가져옵니다.
-  static Future<List<AssetPathEntity>> getAlbumList() async =>
-      await PhotoManager.getAssetPathList(type: RequestType.image);
-
   /// 앨범의 자산 수를 로드합니다.
   static Future<int> loadAssetCount() async {
-    final albums = await getAlbumList();
-    _assetCount = await albums[0].assetCountAsync;
-    return _assetCount;
+    try {
+      final albums = await album.get();
+      return await albums.assetCountAsync;
+    } catch (e) {
+      showErrorDialog(e.toString());
+    }
+
+    return 0;
   }
 
   /**
@@ -27,12 +32,9 @@ class ImageLoader {
    * todo - 앨범은 쉽게 교체할 수 있도록 Elbum 다형성 처리합니다.
    */
   static Future<MyImages> loadAssetListByPageable(Pageable pageable) async {
-    final albums = await getAlbumList();
-    if (albums.isEmpty) {
-      return MyImages.empty();
-    }
+    final albums = await album.get();
 
-    var assetList = await albums[0].getAssetListPaged(page: pageable.page, size: pageable.size);
+    final assetList = await albums.getAssetListPaged(page: pageable.page, size: pageable.size);
     return MyImages.fromAssetEntityList(assetList);
   }
 
