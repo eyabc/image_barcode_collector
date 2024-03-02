@@ -24,15 +24,8 @@ class App extends StatelessWidget {
 
     return MaterialApp(
       navigatorKey: navigatorKey,
-      builder: (context, widget) {
-        Widget error = const Text('...rendering error...');
-        ErrorWidget.builder = (errorDetails) => error;
-        if (widget != null) return widget;
-        throw StateError('widget is null');
-      },
       debugShowCheckedModeBanner: false,
-      home:
-          BlocProvider(create: (context) => ImageCubit(), child: const Home()),
+      home: BlocProvider(create: (context) => ImageCubit(), child: const Home()),
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.yellow),
         useMaterial3: true,
