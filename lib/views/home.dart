@@ -14,7 +14,7 @@ class Home extends StatelessWidget {
       builder: (context, snapshot) {
         var scaffold = Scaffold(
             appBar: AppBar(
-              title: const Text('Barcodes From The Gallery'),
+              title: const AdGoogleBanner(),
               centerTitle: true,
               elevation: 0,
             ));
