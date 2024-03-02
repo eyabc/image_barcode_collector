@@ -83,15 +83,10 @@ class _GridGallery extends State<GridGallery> {
   // 과거 이미지 로드기능 추가
   // 신규 이미지 로드기능 보완
   Future<void> _load() async {
-    if (await PhotoManager.requestPermissionExtend() == PermissionState.authorized && !ImageLoader.isLoaded()) {
+    if (!ImageLoader.isLoaded()) {
       await ImageLoader.loadAssetCount();
     }
 
-    if (await PhotoManager.requestPermissionExtend() != PermissionState.authorized) {
-      // todo 권한설정 요청 alert 추가
-      _pagingController.appendLastPage([]);
-      return;
-    }
     /**
      * imagesFromStorage == 0  -> 앨범에서 로드하도록
      * imagesFromStorage == loadSizeOfStorage -> 스토리지에서 더 불러온다.
